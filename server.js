@@ -2,14 +2,17 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const { body, validationResult } = require('express-validator');
+const helmet = require('helmet');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
-app.use(bodyParser.json());
+app.use(helmet());
+app.use(bodyParser.json({ extended: true }));
 
-mongoose.connect('mongodb://localhost:27017/database name', {
+mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
@@ -26,16 +29,31 @@ const dataSchema = new Schema({
 
 const DataModel = mongoose.model('Data', dataSchema);
 
-app.post('/api/saveData', (req, res) => {
-  const data = new DataModel(req.body);
-  data.save((err) => {
-    if (err) {
-      res.send(err);
-    } else {
-      res.send('Data saved successfully');
+app.post(
+  '/api/saveData',
+  [
+    body('userData.name').notEmpty().isString(),
+    body('userData.phone').notEmpty().isString(),
+    body('userData.email').notEmpty().isEmail(),
+    body('category').notEmpty().isString(),
+    body('title').notEmpty().isString(),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
-  });
-});
+
+    try {
+      const data = new DataModel(req.body);
+      await data.save();
+      res.status(201).json({ message: 'Data saved successfully' });
+    } catch (error) {
+      console.error('Error saving data:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
