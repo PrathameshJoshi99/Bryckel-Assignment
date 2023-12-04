@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useForm } from 'react-hook-form';
 
 const App = () => {
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit, formState } = useForm();
 
   const onSubmit = async (data) => {
     try {
@@ -11,6 +11,7 @@ const App = () => {
       alert('Data saved successfully');
     } catch (error) {
       console.error('Error saving data:', error);
+      alert('An error occurred while saving data.');
     }
   };
 
@@ -20,15 +21,15 @@ const App = () => {
         <label>
           Personal Details:
           <br />
-          <input {...register('userData.name')} placeholder="Name" />
-          <input {...register('userData.phone')} placeholder="Phone" />
-          <input {...register('userData.email')} placeholder="Email" />
+          <input {...register('userData.name', { required: true })} placeholder="Name" />
+          <input {...register('userData.phone', { required: true })} placeholder="Phone" />
+          <input {...register('userData.email', { required: true })} placeholder="Email" />
         </label>
         <br />
         <label>
           Category:
           <br />
-          <select {...register('category')}>
+          <select {...register('category', { required: true })}>
             <option value="Education">Education</option>
             <option value="Experience">Experience</option>
             <option value="Co-curricular">Co-curricular</option>
@@ -38,10 +39,12 @@ const App = () => {
         <label>
           Title:
           <br />
-          <input {...register('title')} placeholder="Title" />
+          <input {...register('title', { required: true })} placeholder="Title" />
         </label>
         <br />
-        <button type="submit">Submit</button>
+        <button type="submit" disabled={formState.isSubmitting}>
+          Submit
+        </button>
       </form>
     </div>
   );
